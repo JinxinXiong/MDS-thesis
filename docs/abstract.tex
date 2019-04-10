@@ -1,0 +1,39 @@
+%%
+% 摘要信息
+% 本文档中前缀"c-"代表中文版字段, 前缀"e-"代表英文版字段
+% 摘要内容应概括地反映出本论文的主要内容，主要说明本论文的研究目的、内容、方法、成果和结论。要突出本论文的创造性成果或新见解，不要与引言相 混淆。语言力求精练、准确，以 300—500 字为宜。
+% 在摘要的下方另起一行，注明本文的关键词（3—5 个）。关键词是供检索用的主题词条，应采用能覆盖论文主要内容的通用技术词条(参照相应的技术术语 标准)。按词条的外延层次排列（外延大的排在前面）。摘要与关键词应在同一页。
+% modifier: 黄俊杰(huangjj27, 349373001dc@gmail.com)
+% update date: 2017-04-15
+%%
+
+\cabstract{
+本文想解决的问题是当仅知道空间中$n$个点两两之间部分的距离信息时，能否有效的恢复出这$n$个点在3维空间中的坐标，并尽量保持已知的距离信息。在直接解决MDS问题的方法中，SMACOF算法可以很好的解决这种有信息缺失情况下的问题。同时受到经典多维尺度重构方法(Classical MDS，CMDS)，想尽量保持已知的距离信息的要求和距离平方矩阵秩的性质的启发，本文尝试先使用低秩矩阵填充的方法恢复距离矩阵，再使用经典多维尺度重构方法，根据填充后的距离矩阵来恢复点在3维空间中的坐标。已经被证明了，当矩阵中已知的元素个数达到一定的下界时，低秩矩阵恢复问题有很大概率恢复出原来的矩阵。本文中主要介绍了SVT和OPTSPACE两种低秩矩阵恢复方法，它们可以确保在已知距离信息比例很小的情况下也能很好的恢复出相对准确的距离矩阵信息。我们给出了上述算法在$S^2$和$Cow$两个数据集上具体的数值实验过程，并展示了在不同信息缺失比例下各算法的恢复效果。对于OPTSPACE算法，分析其当数据集条件数过大时失效的原因，并提出有效的解决方法。最后进一步比较前述算法在两个数据集上的效果和差异，并分析产生差异的原因。
+}
+% 中文关键词(每个关键词之间用“;”分开,最后一个关键词不打标点符号。)
+\ckeywords{多维尺度重构；低秩矩阵矩阵填充；SMACOF；SVT；OPTSPACE}
+
+\eabstract{
+We consider the problem of reconstructing the coordinates of $n$ points in the 3-
+dimension space with only a small subset of observed entries in the distance matrix and hope
+to reserve the observed information as much as possible. The SMACOF algorithm is one of
+the methods for solving MDS problems that can solve the problem with missing information.
+In the meantime, inspired by the classical MDS method, the requirement of reserve the observed
+entries in the distance matrix and the property of the rank of squared distance matrix,
+we proposed an intuitive method that is to first reconstruct the missing distance matrix using
+the low-rank matrix completion algorithms and then applied classical MDS method to get the
+final reconstructed coordinates in the 3-dimension space. It has been shown that when there are
+enough entries in the matrix, solving the low-rank matrix completion optimization problem can
+reconstruct the original matrix with high probability. In this paper, we mainly introduce two
+low-rank matrix completion methods, SVT and OPTSPACE, which can efficiently reconstruct
+the distance matrix even if there is only a small number of observed entries. We present the
+process of the numerical test of applying the above algorithms on $S^2$ and $Cow$ dataset and show the result
+of reconstructing given different sampling rate. For the OPTSPACE algorithm, we analyze
+the reason for the bad performance when applied to the ill-conditioned dataset and proposed
+possible efficient methods to solve it. We further compare the performance and difference of
+methods proposed in this paper when applying to the two datasets and analysis the cause of such
+difference.
+}
+% 英文文关键词(每个关键词之间用半角加空格分开, 最后一个关键词不打标点符号。)
+\ekeywords{Multidimensional scaling, low-rank matrix completion, SMACOF, SVT,\\ OPTSPACE}
+

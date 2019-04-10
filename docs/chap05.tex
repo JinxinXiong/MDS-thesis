@@ -1,0 +1,139 @@
+\chapter{OPTSPACE}
+\label{cha:OPTSPACE}
+\section{介绍}
+OPTSPACE是\cite{keshavan2009gradient}中提出的基于奇异值分解的解决低秩矩阵填充的方法。由上章知，\cite{candes2009exact}提出了对于精确矩阵填充的已知元素的下界$|\Omega|\geq C(\alpha)rn^{1.2}log(n)$，而\cite{keshavan2010matrix}将此下界推进到$|\Omega| \geq C(\alpha)rn\max \{log(n), r\}$。
+算法的想法是去最小化cost function。记
+$$\mathbf{M}_\Omega = \left\{\begin{array}{cc}
+    \mathbf{M}_{ij} & (i,j) \in \Omega \\
+    0 & (i,j) \notin \Omega 
+\end{array}\right$$ 
+$rank(\mathbf{M}) = r$, 则可以定义cost function，$F:\mathbb{R}^{n\times r} \times \mathbb{R}^{n \times r} \to \mathbb{R}$如下：
+\begin{equation*}
+    \mathcal{F}(\mathbf{X}, \mathbf{Y}, S) = \frac{1}{2}\sum_{(i,j)\in\Omega}\left[\mathbf{M}_{ij} - (\mathbf{X}S\mathbf{Y}^\intercal)_{ij}\right]^2
+\end{equation*}
+\begin{equation*}
+    F(\mathbf{X,Y}) = \min_{S\in\mathbb{R}^{r\times r}}\mathcal{F}(\mathbf{X,Y},S)
+\end{equation*}
+其中$\mathbf{X}\in\mathbb{R}^{n\times r}, \mathbf{Y}\in\mathbb{R}^{n\times r}$, 且$\mathbf{X}^\intercal\mathbf{X} = \mathbf{Y}^\intercal\mathbf{Y} = n\mathbf{I}$。
+至此我们可以考虑用梯度下降法来求解cost function的最小值，而$\mathbf{M}_\Omega$的奇异值分解，可以作为梯度下降法的初值猜测。接下来先介绍一些算法中的定义，最后再给出完整的算法。
+\section{Trimming}
+\label{con: trim}
+Trimming的操作是删去矩阵中过度表达的行与列，即degree超过$\frac{2|\Omega|}{n}$的行与列全部重置为0，用$d_c(i), d_r(i)$表示矩阵中的第i列和第j列的degree，故Trimming即
+$$
+    Tr(\mathbf{M}_\Omega) = \left\{\begin{array}{cc}
+        0 & d_c(i) > \frac{2|\Omega|}{n} \ \text{or}\ d_r(j) > \frac{2|\Omega|}{n} \\
+        (\mathbf{M}_\Omega)_{ij} & otherwise 
+    \end{array}\right
+$$
+Trimming的操作有一点违反我们的思维，因为这一步我们似乎丢掉了一些有用的信息。但这样做是很重要的。当n比较大的时候，对于矩阵的奇异值分解后的奇异值将集中在这些过度表达的行或列，而不能表是足够的缺实值的信息。通过Trimming的操作可以有效的防止这一问题。
+
+\section{Rank-p projection}
+Rank-p projection可以视作是对$Tr(\mathbf{M}_\Omega)$进行奇异值分解，并对得到的奇异值和奇异向量进行尺度变换。即得到$Tr(\mathbf{M}_\Omega) = \sum_{i=1}^nx_i\sigma_iy_i^\intercal$。故可定义Rank-p projection为
+$\mathcal{P}_p$: 
+\begin{equation*}
+    \mathcal{P}_p(Tr(\mathbf{M}_\Omega)) = \mathbf{X}_0S_0\mathbf{Y}_0^\intercal
+\end{equation*}
+其中$\mathbf{X}_0\in\mathbb{R}^{n \times p}, \mathbf{Y}_0\in\mathbb{R}^{n\times p}$, $S_0$为$p\times p$的对角矩阵，
+分别定义为$\mathbf{X}_0 = \sqrt{n}(x_1,\dots,x_p), \mathbf{Y}_0 = \sqrt{n}(y_1,\dots,y_p), S_0 = \frac{n}{|\Omega|}diag(\sigma_1,\dots,\sigma_p)$
+
+\section{Gradient descent}
+为了方便后面的描述，记$\overrightarrow{x} = (\mathbf{X,Y})$将$\mathcal{F}$改写如下：
+\begin{equation*}
+    \mathcal{F}(\mathbf{X,Y},S) = \frac{1}{2}\left\|P_{\Omega}(\mathbf{M} - \mathbf{X}S\mathbf{Y}^\intercal)\right\|_F^2
+\end{equation*}
+则
+\begin{equation*}
+    gradF(\overrightarrow{x})_{\mathbf{X}} = P_\Omega(\mathbf{X}S\mathbf{Y}^\intercal - \mathbf{M})\mathbf{Y}S^\intercal
+\end{equation*}
+\begin{equation*}
+    gradF(\overrightarrow{x})_{\mathbf{Y}} = P_\Omega(\mathbf{X}S\mathbf{Y}^\intercal - \mathbf{M})^\intercal\mathbf{X}S
+\end{equation*}
+故$gradF(\overrightarrow{x_k}) = (gradF(\overrightarrow{x_k})_{\mathbf{X}},gradF(\overrightarrow{x_k})_{\mathbf{Y}})$，则由初值$\overrightarrow{x_0} = (\mathbf{X}_0,\mathbf{Y}_0)$, 可以进行梯度下降来求解最小值。\cite{armijo1966minimization}中证明了对于任意大小的$\tau$，OPTSPACE算法都可以收敛到局部最小值，并指出$\tau = 10^{-3}$为一个在实际应用中较好的选择。最后关于OPTSPACE算法的终止条件，与上一节中SVT算法的终止条件相同，即$\|P_{\Omega}(\mathbf{X} - \mathbf{M})\|_F/\|P_{\Omega}(\mathbf{M})\|_F \leq tol$。综上，完整的OPTSPACE算法可以叙述如下：
+
+\section{OPTSPACE算法}
+\begin{algorithm}
+\caption{OPTSPACE算法} 
+\label{alg4}
+\begin{algorithmic}[1]
+\REQUIRE{$\mathbf{M}_\Omega$, step size\ $\tau = 10^{-3}$, MaxIter = 1000, tol = $10^{-4}$, rank $r$}
+\STATE{Trim $\mathbf{M}_\Omega \Rightarrow \ Tr(\mathbf{M}_\Omega)$}
+\STATE{$\mathcal{P}_r(\mathbf{M}_\Omega) = \mathbf{X}_0S_0\mathbf{Y}_0^\intercal$ $\Rightarrow \overrightarrow{x_0} = (\mathbf{X}_0, \mathbf{Y}_0)$}
+\FOR{$k = 0, \dots, $MaxIter}
+\STATE{$s_k = \arg \min_S \mathcal{F}(\mathbf{X}_k, \mathbf{Y}_k, S)$}
+\STATE{$\overrightarrow{w_k} = gradF(\overrightarrow{x_k})$}
+\STATE{Set $t_k = \tau$}
+\WHILE{$F(\overrightarrow{x_k}-t_k\overrightarrow{w_k}) - F(\overrightarrow{x_k}) > \frac{1}{2}t_k\left\|\overrightarrow{w_k}\right\|^2$}
+\STATE{$t_k = \frac{t_k}{2}$}
+\ENDWHILE
+\STATE{Set $\overrightarrow{x_{k+1}} = \overrightarrow{x_k} - t_k\overrightarrow{w_k}$}
+\IF{$\frac{\left\|P_\Omega(\mathbf{M} - \hat{\mathbf{M}})\right\|_F}{\left\|P_\Omega(\mathbf{M})\right\|_F} < tol$}
+\STATE{break}
+\ENDIF
+\ENDFOR
+\RETURN{$\Hat{\mathbf{M}} = \mathbf{X}_kS_k\mathbf{Y}_k^\intercal$}
+\end{algorithmic}
+\end{algorithm}
+
+关于第4步中求解$S$的方法，由于$\mathcal{F}$为关于$S$的二次函数，故求导等于0来求解。
+\begin{equation*}
+\begin{split}
+    \frac{d\mathcal{F}(\mathbf{X,Y},S)}{dS_{ij}} &= \frac{1}{2}P_\Omega\frac{d<\mathbf{M}_\Omega - \mathbf{X}S\mathbf{Y}^\intercal, \mathbf{M}_\Omega - \mathbf{X}S\mathbf{Y}^\intercal>_{ij}}{dS_{ij}}\\
+    &=-\frac{1}{2}P_\Omega\frac{<\mathbf{M}_\Omega - \mathbf{X}S\mathbf{Y}^\intercal, d\mathbf{X}S\mathbf{Y}^\intercal>_{ij}}{dS_{ij}}\\
+    &=-\frac{1}{2}P_\Omega\frac{<\mathbf{X}^\intercal(\mathbf{M}_\Omega - \mathbf{X}S\mathbf{Y}^\intercal)_{ij}\mathbf{Y}, dS>}{dS_{ij}} = 0
+\end{split}
+\end{equation*}
+故可以得到
+\begin{equation*}
+    \left[\mathbf{X}^\intercal(\mathbf{X}_{\cdot i}\mathbf{Y}_{\cdot j}^\intercal)\mathbf{Y}\right]S_{ij} = \mathbf{X}^\intercal(\mathbf{M}_\Omega)_{ij}\mathbf{Y}
+\end{equation*}
+可以求解出矩阵$S$。
+
+同时注意，OPTSPACE算法中需要提前给出恢复矩阵的秩，
+\cite{keshavan2009gradient}中给出了一种估计稀疏矩阵秩的方法。记$\epsilon = |\Omega|/n$,同时如第\ref{con: trim}节中对Trimming操作之后的矩阵进行奇异值分解即：
+\begin{equation*}
+    Tr(\mathbf{M}_{\Omega}) = \sum_{i=1}^n x_i\sigma_iy_i^\intercal
+\end{equation*}
+则基于奇异值可以定义如下的损失函数：
+\begin{equation*}
+    R(i) = \frac{\sigma_{i+1} + \sigma_i\sqrt{\frac{i}{\epsilon}}}{\sigma_i}
+\end{equation*}
+则可估计填充后的矩阵$\mathbf{M}$的秩为使$R(i)$取最小值的下标$i$。这个算法之后的想法是，如果$|\Omega|$足够大，则当把奇异值按从大到小排列的时候，会发现第$r+1$个和第$r$个奇异值之间的差很大。故可以预测完整的$\mathbf{M}$矩阵的秩为$r$。但当$|\Omega|$相对较小或者矩阵的条件数较大的时候，这个算法的结果和真实值的误差就很大。但由距离平方矩阵秩的性质，我们希望在三维空间中重构坐标，则距离平方矩阵的秩最大不会超过5。我们不妨尝试所有可能的秩的值，分别带入算法，最后选取效果相对好小的最小的秩作为最终带入算法中进行恢复的参数。
+
+\section{Incremental OPTSPACE}
+原始的OPTSPACE算法有一个缺陷，就是当带入算法的数据矩阵的条件数太大的时候，OPTSPACE算法无法很好的考虑到较小的奇异值的贡献。其中条件数定义为$k = \frac{\sigma_1(\mathbf{M})}{\sigma_r(\mathbf{M})}$，$r$为矩阵$\mathbf{M}$的秩，$\sigma_i(\mathbf{M})$表示矩阵$\mathbf{M}$从大到小排序第$i$个奇异值。即当以原始矩阵奇异值分解作为初始值带入梯度下降算法中时，会落入一个局部最小值，并只展现出相对较大的几个特征值所产生的结构特征，而忽略较小奇异值产生的影响。在第
+\ref{cha:numerical}章中对于$Cow$数据集的实验中我们就可以看到这一缺陷。为解决条件数较大情形下的问题，\cite{keshavan2009gradient}中提供了一种名为Incremental OPTSPACE的算法。其主要的想法是每次迭代中，只计算最大的奇异值所产生的贡献，并在下一次迭代中删去这一部分贡献。这样做可以保证那些较小的奇异值也被充分的应用，进而达到相对原始OPTSPACE算法更好的效果。具体算法如下：
+
+\begin{algorithm}
+\caption{Incremental OPTSPACE算法} 
+\label{alg6}
+\begin{algorithmic}[1]
+\REQUIRE{$\mathbf{M}_\Omega$, step size\ $\tau = 10^{-3}$, MaxIter = 500, tol = $10^{-4}$, rank $r$}
+\STATE{Trim $\mathbf{M}_\Omega \Rightarrow \ Tr(\mathbf{M}_\Omega)$}
+\STATE{Set $\Hat{\mathbf{M}} = 0$}
+
+\FOR{$k = 0, \dots, r$}
+\STATE{计算$\mathbf{M}_\Omega - \Hat{\mathbf{M}}$最大的奇异向量$(u, v)$}
+\IF{$k = 0$}
+\STATE{$\mathbf{X}_0 = u; \mathbf{Y}_0 = v$}
+\ELSE
+\STATE{$\mathbf{X}_0 = [\mathbf{X}, u]; \mathbf{Y} = [\mathbf{Y}, v]$}
+\ENDIF
+\STATE{$\overrightarrow{x_0} = (\mathbf{X}_0, \mathbf{Y}_0)$}
+
+\FOR{$k = 0, \dots, $MaxIter}
+\STATE{$s_k = \arg \min_S \mathcal{F}(\mathbf{X}_k, \mathbf{Y}_k, S)$}
+\STATE{$\overrightarrow{w_k} = gradF(\overrightarrow{x_k})$}
+\STATE{Set $t_k = \tau$}
+\WHILE{$F(\overrightarrow{x_k}-t_k\overrightarrow{w_k}) - F(\overrightarrow{x_k}) > \frac{1}{2}t_k\left\|\overrightarrow{w_k}\right\|^2$}
+\STATE{$t_k = \frac{t_k}{2}$}
+\ENDWHILE
+\STATE{Set $\overrightarrow{x_{k+1}} = \overrightarrow{x_k} - t_k\overrightarrow{w_k}$}
+\IF{$|\mathbf{F}(x_{k+1}) - \mathbf{F}(x_k)| \leq tol\mathbf{F}(x_k)$}
+\STATE{break}
+\ENDIF
+\STATE{$\Hat{\mathbf{M}} = \mathbf{X}_kS_k\mathbf{Y}_k$}
+\ENDFOR
+\ENDFOR
+\RETURN{$\Hat{\mathbf{M}}$}
+\end{algorithmic}
+\end{algorithm}

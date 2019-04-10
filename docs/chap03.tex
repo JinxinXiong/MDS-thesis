@@ -1,0 +1,148 @@
+\chapter{SMACOF}
+\label{cha:SMACOF}
+\section{介绍}
+不同于传统的MDS方法是想最小化恢复后的坐标产生的Gram矩阵和由已知距离矩阵生成的Gram矩阵之间的差。SMACOF方法是想直接最小化已知距离矩阵与重构的新坐标产生的距离矩阵之间的平方误差。本节中引入Stress function的定义来描述这种差值。同时在Stress function中引入一个权值，在本文中称为mask matrix。这样的操作允许输入的已知距离矩阵中有缺失值。
+
+最小化Stress function的方法有很多，本节中将介绍Jan de Leeuw\cite{de2011applications}的一种借助iterative majorization的方法来求解Stress function的最小值的算法，即SMACOF(Scaling by majorizing a complicated function)。
+\subsection{Stress Function}
+与第2章中一样，定义$\mathbf{X}$为点矩阵。与前面不同，为了方便描述，此后$D$表示已观察到的距离组成的矩阵。$d_{ij}(\mathbf{X})$表示点$i$到点$j$之间的欧氏距离。则可定义mask matrix如下：
+
+$$
+W_{ij} = \left\{\begin{array}{cc}
+    0 & D_{ij} = 0 \\
+    1 & D_{ij} \neq 0
+\end{array}\right
+$$
+
+故定义stress function:
+\begin{equation}
+\begin{split}
+    \sigma(\mathbf{X}) &= \sum_{i<j}W_{ij}(D_{ij} - d_{ij}(\mathbf{X}))^2 = \frac{1}{2}\sum_{i,j}W_{ij}(D_{ij} - d_{ij}(\mathbf{X}))^2\\
+    &= \frac{1}{2}\left(\sum_{i,j}W_{ij}D_{ij}^2 + \sum_{i,j}W_{ij}d_{ij}^2(\mathbf{X}) - 2\sum_{i,j}W_{ij}D_{ij}d_{ij}(\mathbf{X})\right)\\
+    &= \frac{1}{2}\left(C + \eta^2(\mathbf{x}) - 2\rho(\mathbf{x})\right)\label{con:stressfunction}
+\end{split}
+\end{equation}
+
+\section{Majorization}
+这一节中将引入majorizing function和majorization的方法，然后运用此方法来求解stress function的最小值。
+\begin{definition}
+函数$f(x)$的majorizing function\ $g(x,z)$应满足如下三个条件：
+\begin{itemize}
+\item $g(x,z)$比$f(x)$更容易求最小值
+\item $f(x)\leq g(x,z)$
+\item $f(z) = g(z,z)$，称$z$为supporting point
+\end{itemize}
+\end{definition}
+
+Majorization的主要想法是在每一次的迭代循环中，只最小化一个以Stress function为界，且与Stress function在一给定点相切的凸函数。一般情况下的Majorization最小化函数的过程如Algorithm \ref{alg: majorization}。
+\begin{algorithm}
+\caption{用majorization的方法求解函数$f(x)$的最小值} 
+\label{alg: majorization}
+\begin{algorithmic}[1]
+\REQUIRE{原函数$f(x)$, majorizing function $g(x,z)$, \ep}
+\STATE{Set $z = z_0$, initial value}
+\WHILE{not convergent}
+\STATE{计算$g(x,z)$的最小值，并记录更新的$x$值，$x^u$. 即有$g(x^u, z)\leq g(z,z)$}
+\IF{$f(z) - f(x^u) < \epsilon$}
+\STATE{break}
+\ENDIF
+\STATE{Set $z = x^u$}
+\ENDWHILE
+\RETURN{z}
+\end{algorithmic}
+\end{algorithm}
+
+现在利用majorization的方法来求解stress function的最小值。为此，需要先找到$\sigma(\mathbf{X})$的majorization funciton。观察 (\ref{con:stressfunction})式可知，其中的第一项为一常数，接下来估计后两项$\eta^2(\mathbf{X})$和$\rho(\mathbf{X})$
+
+首先定义矩阵$A_{ij} = \{a_{kt}\}$，
+
+$$a_{kt} = \left\{\begin{array}{cc}
+        1 & k = t = i \ \text{or}\  j  \\
+        -1 & k = i, t = j \ \text{or}\  k = j, t = i \\
+        0 & else
+    \end{array}\right$$
+记$X_k$为矩阵$\mathbf{X}$中的第$k$列，即所有点第$k$维坐标组成的列向量。注意与上一章中引入的记号$\mathbf{X}_i$表示第$i$个点的坐标向量区分开。则有：
+\begin{equation*}
+\begin{split}
+    d_{ij}^2(\mathbf{X}) &= \sum_{k=1}^pX_k^\intercal(\mathbf{e}_i - \mathbf{e}_j)(\mathbf{e}_i - \mathbf{e}_j)^{\intercal} X_k^{\intercal}\\
+    &=\sum_{k=1}^pX_k^{\intercal}A_{ij}X_k\\
+    &=trace\left(\mathbf{X}A_{ij}\mathbf{X}\right)
+\end{split}
+\end{equation*}
+
+则
+\begin{equation*}
+\begin{split}
+    \eta^2(\mathbf{X}) &= \sum_{i,j}W_{ij}d_{ij}^2(\mathbf{X})
+     = trace\left[\mathbf{X}\left(\sum_{i,j}W_{ij}A_{ij}\right)\mathbf{X}\right]\\
+     &= trace\left(\mathbf{X}^\intercal\mathbf{V}\mathbf{X}\right)
+\end{split}
+\end{equation*}
+
+
+其中$\mathbf{V} = \sum_{i,j}W_{ij}A_{ij} = \left\{v_{ij}\right\}$, 
+$v_{ij} = \left\{\begin{array}{cc}
+    -W_{ij} & i\neq j  \\
+    \sum_{j=1, i\neq j}^nW_{ij} &  i = j
+\end{array}\right$
+\vspace{3ex}
+
+接下来估计$\rho(\mathbf{X})$, 由Cauchy-Schwarz不等式
+\begin{equation*}
+    \sum_{k=1}^p(x_{ik} - x_{jk})(z_{ik} - z_{jk}) \leq\left(\sum_{k=1}^p(x_{ik} - x_{jk})^2\right)^{\frac{1}{2}} \cdot \left(\sum_{k=1}^p(z_{ik} - z_{jk})^2\right)^{\frac{1}{2}}
+\end{equation*}
+即
+\begin{equation*}
+    \sum_{k=1}^pX_k^{\intercal}A_{ij}Z_k = trace\left(\mathbf{X}^\intercal A_{ij} \mathbf{Z}\right) \leq d_{ij}(\mathbf{X}) \cdot d_{ij}(\mathbf{Z})\label{con:equal}
+\end{equation*}
+当且仅当$\mathbf{X = Z}$是取等。
+故
+\begin{equation*}
+    -d_{ij}(\mathbf{X}) \leq -\frac{trace\left(\mathbf{X}^\intercal A_{ij} \mathbf{Z}\right)}{d_{ij}(\mathbf{Z})}
+\end{equation*}
+带入$\rho(\mathbf{X})$的表达式可得
+\begin{equation}
+\label{con: rho}
+\begin{split}
+    -\rho(\mathbf{X}) &= -\sum_{i,j}\left(W_{ij}D_{ij}\right)d_{ij}(\mathbf{X})\\
+    &\leq -trace\left[\mathbf{X}^\intercal\left(\sum_{i,j}\frac{W_{ij}D_{ij}}{d_{ij}(\mathbf{Z})}\cdot A_{ij}\right)\mathbf{Z}\right]\\
+    &= -trace\left(\mathbf{X}^\intercal B(\mathbf{Z})\mathbf{Z}\right)
+\end{split}
+\end{equation}
+其中若$d_{ij}(\mathbf{Z}) = 0$，则$b_{ij} = 0$, 其余$B(\mathbf{Z}) = \{b_{ij}\}$,
+$b_{ij} = \left\{\begin{array}{cc}
+    -\frac{W_{ij}D_{ij}}{d_{ij}(\mathbf{Z})}   &  i\neq j \\
+    -\sum_{j=1, j\neq i}^nb_{ij}     & i = j
+    \end{array}\right$\\
+由(\ref{con: rho})式当且仅当$\mathbf{X = Z}$时取等，则：
+\begin{equation*}
+    -\rho({\mathbf{X}}) \leq -trace\left(\mathbf{X}^\intercal B(\mathbf{Z}) \mathbf{X}\right) \leq -trace\left(\mathbf{X}^\intercal B(\mathbf{Z}) \mathbf{Z}\right)
+\end{equation*}
+若记
+\begin{equation*}
+    \tau(\mathbf{X,Z}) = \frac{1}{2}\left(\sum_{i,j}W_{ij}D_{ij}^2 + trace(\mathbf{X}^\intercal \mathbf{VX}) -2trace(\mathbf{X}^\intercal B(\mathbf{Z})\mathbf{Z})\right)
+\end{equation*}
+则可知$\sigma(\mathbf{X}) \leq \tau(\mathbf{X,Z})$, 同时可以验证majorization function中三个要求。故$\tau(\mathbf{X,Z})$可作为$\sigma(\mathbf{X})$的majorization function, 并且为关于变量$\mathbf{X}$的二次函数。故最小值可以通过令导数为零来求解。即求解$\nabla_{\tau}(\mathbf{X,Z}) = \mathbf{VX}- B(\mathbf{Z})\mathbf{Z} = 0$。由于$\mathbf{V}$不一定满秩，故用Moore-Penrose inverse来进行求解，记广义逆为$\mathbf{V}^+ = (\mathbf{V} + \mathbf{11}^\intercal)^{-1} - n^{-2}\mathbf{11}^\intercal$，则$\mathbf{X}^u = \mathbf{V}^+B(\mathbf{Z})\mathbf{Z}$。
+
+至此我们找到了stress function的majorization function并且知道了其算法的更新规则。结合Algorithm \ref{alg: majorization}中的结论，可以得到最终的SMACOF算法。
+
+%%%%%%%%具体算法
+
+\section{SMACOF算法}
+\begin{algorithm}
+\caption{SMACOF算法} 
+\label{alg: SMACOF}
+\begin{algorithmic}[1]
+\REQUIRE{随机初始值$\mathbf{X}$，$\mathbf{Z = X}$, $\epsilon = 10^{-4}$, $k=0$, MaxIter = 1000}
+\STATE Set sigma = $\sigma(\mathbf{X})$, sigma\_old = sigma
+\WHILE {$k=0$ \ \text{or} \ (sigma\_old - sigma > $\epsilon$ \ \text{and}\ k $\leq$ MaxIter)}
+\STATE{sigma\_old = sigma}
+\STATE{$k = k + 1$}
+\STATE{$\mathbf{X} = \mathbf{V}^+B(\mathbf{Z})\mathbf{Z}$}
+\STATE{sigma = $\sigma(\mathbf{X})$}
+\STATE{$\mathbf{Z = X}$}
+\ENDWHILE
+\RETURN{$\mathbf{Z}$}
+\end{algorithmic}
+\end{algorithm}
+至此我们介绍了两种直接利用已有的距离矩阵来恢复坐标的方法。由数值计算结果可知，SMACOF即使是在距离矩阵缺失较为严重的时候也能很好的恢复出坐标。受经典MDS方法的启发，接下来，本文将介绍两种低秩矩阵填充方法。尝试先恢复距离矩阵，之后再使用经典MDS方法来恢复坐标。

@@ -1,0 +1,21 @@
+%%
+% 引言或背景
+% 引言是论文正文的开端,应包括毕业论文选题的背景、目的和意义;对国内外研究现状和相关领域中已有的研究成果的简要评述;介绍本项研究工作研究设想、研究方法或实验设计、理论依据或实验基础;涉及范围和预期结果等。要求言简意赅,注意不要与摘要雷同或成为摘要的注解。
+% modifier: 黄俊杰(huangjj27, 349373001dc@gmail.com)
+% update date: 2017-04-15
+%%
+
+\chapter{引言}
+%定义，过去的研究和现在的研究，意义，与图像分割的不同,going deeper
+\label{cha:introduction}
+\section{问题介绍}
+多维尺度变换是一种将高维多元数据在低维空间中可视化的方法。多维尺度变换的目标是将原始数据降维到一个低维空间，并试图使低维空间中由降维产生的形变最小。一般可以将多维尺度变换解决的问题描述为：当$n$个对象之间的距离或相似性已知时，寻求这些对象在给定维数的低维空间中的表示，并使低维空间中对象间的距离与相似性与最开始给定的相似。例如，一个形象的例子：假设你有一张地图，上面有$n$个城市。通常这样的地图上会给出城市之间的距离。此时MDS所想解决的问题就是，如果只给出了城市两两之间的距离信息，能否尽可能重构出原来的地图。MDS根据涉及的对象是否可以计量分为度量型多维尺度变换(Metric MDS)和非度量型多维尺度变换(Non-metric MDS)。在度量型多维尺度变换中，又将距离度量为欧式距离的称为经典多维尺度变换(Classical MDS, CMDS)。
+
+\section{主要内容}
+本文试图解决的问题是，当已知$n$个点两两之间部分的距离信息时，能否在尽量保持距离信息的前提下，重构出三维空间中这$n$个点的坐标。显然，如果距离信息完整或者缺失比率比较少的时候，经典多维尺度变换的方法能比较有效的解决这个问题。但当距离信息缺失比例比较大的情况下，经典多维尺度变换的方法的效果就不算很好。因此，本文中介绍了一种更有效的方法，SMACOF。SMACOF试图最小化重构空间点与点之间的距离与原距离信息之间的平方误差。同时引入了一个权重变量，允许输入的给定距离信息中有缺失值，并称这个平方误差为Stress Function。最小化Stress Function的方法有很多，如Krustal\cite{kruskal1964multidimensional}的用迭代最速下降的方法来求Stress Function的最小值。Jan de Leeuw\cite{de2011applications}的SMACOF方法采用iterative majorization的方法，是一种收敛效果更好的算法。
+除了上述两种经典的MDS算法之外，受经典多维尺度变换方法还有距离平方矩阵秩的性质的启发，我们考虑先通过低秩矩阵恢复的方法恢复距离矩阵信息，再使用经典多维尺度变换的方法重构出坐标。近几年解决低秩矩阵填充问题的方法有很多，如APG\cite{toh2010accelerated}（Accelerated Proximal Gradient），FPCA\cite{ma2011fixed}（Fixed Point Continuation with Approxiamte SVD），ADMIRA\cite{lee2010admira}（Atomic Decomposition for Minimum Rank Approximation）等。
+本文后半部分主要介绍了两种低秩矩阵的恢复算法SVT(Singular Value Thresholding)\cite{cai2010singular}和OPTSPACE\cite{keshavan2010matrix}。尝试先使用上述两种低秩矩阵恢复的方法恢复距离信息，再使用经典多维尺度变换技术来重构坐标。最后，我们对前述算法进行数值实验，给出各算法在球面（$S^2$）和牛形曲面（$Cow$）两个数据集上的数值实验结果，从直观恢复结果，Error指标以及算法收敛速度三个方面来比较各算法分别在两个数据集的效果，并尝试从数据集和算法特点来分析产生效果差别的原因。
+
+\section{本文结构与章节安排}
+本文的剩余部分的结构大致如下。第 \ref{cha:classMDS}章中，我们将介绍经典多维尺度变换的背景理论和具体算法。第
+\ref{cha:SMACOF}章中，我们首先介绍Majorization方法，引入Majorizing Function还有Stress Function的概念。并最后用Majorization的方法来最小化Stress function，得到最终的SMACOF算法。第 \ref{cha:SVT}章和第 \ref{cha:OPTSPACE}章中，首先介绍了距离平方矩阵秩的性质，接下来介绍SVT和OPTSPACE两种低秩矩阵恢复的方法，并在原始OPTSPACE算法的基础上引出在特殊情况下有更好效果的Incremental OPTSPACE算法。最后，在第 \ref{cha:numerical}章中，我们给出了具体的数值实验和分析过程，以及最终的分析比较的结果。

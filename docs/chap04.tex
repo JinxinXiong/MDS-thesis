@@ -1,0 +1,123 @@
+\chapter{SVT}
+\label{cha:SVT}
+\section{介绍}
+接下来我们所需要解决的问题可描述为：根据一小部分已知的元素，重构或者恢复一个$n\times n$低秩矩阵$\mathbf{M}$。精确矩阵填充问题(exact matrix completion problem)等价于找到一个秩最小的矩阵与已知的矩阵元素相对应。即：
+\begin{align}
+\label{al: rank}
+&\min \ rank(\mathbf{X}) \nonumber\\
+s.t.\ &\mathbf{X}_{ij} = \mathbf{M}_{ij}, (i,j)\in \Omega
+\end{align}
+这是一个NP-Hard问题，在压缩感知(compressed sensing)领域中，一个核心的问题就是找到满足一系列限制条件的最稀疏的向量。即：
+\begin{align*}
+&\min \ \left\|x\right\|_{l_0}\\
+s.t.\ &Ax = b,
+\end{align*}
+其中$l_0$范数表示向量的稀疏性，即向量中非零元素的个数。为了解决这个问题，一个通用的方法是解决下面的优化问题：
+\begin{align*}
+&\min \ \left\|x\right\|_{l_1}\\
+s.t.\ & Ax = b,
+\end{align*}
+其中$l_1$范数是向量中所有元素绝对值之和。$l_1$范数的优化问题，在适当的条件下可以提供原$l_0$问题的最优解。现在回到原来的优化问题(\ref{al: rank})，秩可以视为矩阵非零奇异值的个数，而核范数是矩阵所有奇异值之和。故可以将矩阵$rank(\cdot)$类比成向量的$l_0$范数，矩阵的核范数$\|\cdot\|_*$可以对应成$l_1$范数。矩阵秩的优化问题和压缩感知问题之间的联系在\cite{recht2010guaranteed}中有详细的研究。由上述想法Candes and Recht将(\ref{al: rank})中的问题凸松弛化为核范数的优化问题，即最小化奇异值的和\cite{candes2009exact}。如下：
+\begin{align}
+\label{al:optimize}
+&\min \ \left\|\mathbf{X}\right\|_* , \nonumber\\
+s.t.\ &\mathbf{X}_{ij} = \mathbf{M}_{ij}, (i,j)\in \Omega
+\end{align}
+同时\cite{candes2009exact}中证明了，对于一个$m\times n$秩为$r$的矩阵$\mathbf{M}$，当已知元素个数$|\Omega|$满足，$|\Omega|\geq C(\alpha) r n^{1.2}log(n)$，且满足incoherence的性质时，解决问题(\ref{al:optimize})可以很大概率的恢复矩阵$\mathbf{M}$。
+
+SVT就为解决问题(\ref{al:optimize})的方法之一。 同时相较于\cite{liu2009interior}中的interior point方法, SVT更能解决数据量比较大的情况下的问题。SVT算法是一种迭代算法，产生一个矩阵序列$\{\mathbf{X}^k,\mathbf{Y}^k\}$。每一步的迭代操作主要就是对矩阵$\mathbf{Y}^k$的奇异值进行一个软阈值操作(soft-thresholding operation)。由于$\mathbf{Y}^k$为一稀疏矩阵，SVT算法有每一次迭代中计算代价低，存储空间要求低的优点。
+
+
+\section{距离平方矩阵的低秩性}
+与前面的定义相同，$\mathbf{X} = [\mathbf{x}_1, \dots, \mathbf{x}_n]$, $\mathbf{x}_i \in \mathbb{R}^p$，并假设$p\ll n$，$\mathbf{D}$为距离平方矩阵。\cite{dokmanic2015euclidean}中提出了距离平方矩阵的秩应满足的性质，我们将它叙述成定理并给出相应证明如下：
+\begin{theorem}
+$rank(\mathbf{D}) \leq (p+2)$
+\end{theorem}
+
+\begin{proof}
+由
+\begin{equation*}
+    D = \mathbf{1} \cdot diag(\mathbf{X}^\intercal\mathbf{X})^\intercal + diag(\mathbf{X}^\intercal\mathbf{X}) \cdot \mathbf{1}^\intercal - 2 \mathbf{X}^\intercal\mathbf{X}
+\end{equation*}
+
+由$rank(\mathbf{X})\leq p$, 则$rank(\mathbf{X}^\intercal\mathbf{X}) \leq p$。又上式中的其他两项的秩均为$1$，由秩的性质知
+\begin{equation*}
+\begin{split}
+    rank(\mathbf{D}) &\leq rank(\mathbf{1} \cdot diag(\mathbf{X}^\intercal \mathbf{X})) + rank(diag(\mathbf{X}^\intercal\mathbf{X}) \cdot \mathbf{1}^\intercal) - rank(2\mathbf{X}^\intercal\mathbf{X})\\
+    &\leq p + 2
+\end{split}
+\end{equation*}
+\end{proof}
+故由上定理可知距离平方矩阵的秩最大只能为$(p + 2)$，故当$d\ll n$时，$rank(\mathbf{D})\ll n$。故接下来试图采用低秩矩阵的恢复方法来恢复距离平方矩阵。
+
+\section{SVT算法}
+在本小节将介绍\cite{cai2010singular}中的SVT算法来解决(\ref{al:optimize})中的优化问题，首先定义一个正交算子$P_{\Omega}$
+$$
+P_{\Omega}(\mathbf{M})_{ij} = \left\{\begin{array}{cc}
+     \mathbf{M}_{ij} & (i,j) \in\Omega \\
+     0 & otherwise
+\end{array}
+$$
+故优化问题可写成
+\begin{align}
+\label{al: ortho}
+&\min \ \left\|\mathbf{X}\right\|_*\nonumber\\
+s.t.\ & P_{\Omega}(\mathbf{M}) = P_{\Omega}(\mathbf{X})
+\end{align}
+依照\cite{cai2010singular}中，对于给定的软阈值$\tau$和步长序列$\{\delta_k\}$，初值$\mathbf{Y}_0$，有迭代算法:
+$$
+\left\{\begin{array}{cc}
+\label{arr: iter}
+     \mathbf{X}^k &= \mathbf{D}_\tau(\mathbf{Y}^{k-1}) \nonumber\\
+     \mathbf{Y}^k &= \mathbf{Y}^{k-1} + \delta_kP_\Omega(\mathbf{M} - \mathbf{X}^k)
+\end{array}\right
+$$
+其中$D_{\tau}$为Shrinkage operator。若$\mathbf{X}\in\mathbb{R}^{n_1\times n_2}, rank(\mathbf{X}) = r$，记$\mathbf{X}$的奇异值分解为$\mathbf{X = U}\Sigma \mathbf{V}^\intercal, \Sigma = diag\left(\{\sigma_i\}_{1\leq i \leq r}\right), \mathbf{U}\in\mathbb{R}^{n_1\times r}, \mathbf{V}\in \mathbb{R}^{n_2\times r}$
+则
+\begin{equation*}
+\mathbf{D}_\tau(\mathbf{X}) = \mathbf{U}\mathbf{D}_\tau(\Sigma)\mathbf{V}^\intercal, 
+\mathbf{D}_\tau(\Sigma) = diag(\{\sigma_i - \tau\}_+)
+\end{equation*}
+
+在\cite{cai2010singular}中已经证明$\{ \mathbf{X}^k\}$序列收敛到如下优化问题的解
+\begin{align*}
+&\min \ \tau\left\|\mathbf{X}\right\|_* + \frac{1}{2}\left\|\mathbf{X}\right\|_F^2  \\
+s.t.\ & P_{\Omega}(\mathbf{M}) = P_{\Omega}(\mathbf{X})
+\end{align*}
+而当$\tau \to \inf$时，上述优化问题即逼近(\ref{al: ortho})式的解。
+由\cite{cai2010singular}中已经证明，当步长$\delta$大于0，小于2时的时候，该算法一定收敛，但是收敛速度会很慢。故采用论文中建议的数值，即若$|\Omega|=m$,则$\delta = 1.2\frac{n_1n_2}{m}$。
+
+关于$\mathbf{Y}^0$初值的选择，记$k_0$为满足如下条件的整数
+\begin{equation*}
+    \frac{\tau}{\delta\|P_\Omega(\mathbf{M})\|_2}\in (k_0-1, k_0].
+\end{equation*}
+由于$\mathbf{Y}^0 = \mathbf{0}$，根据前面的迭代算法可以看出，$\mathbf{X}^k = \mathbf{0}$且$\mathbf{Y}^k = k\delta P_{\Omega}(\mathbf{M})$，$k = 1,\dots,k_0$。故可以跳过计算$\mathbf{X}^1,\dots,\mathbf{X}^{k_0}$的过程，直接以$Y^0 = k_0\delta P_\Omega(\mathbf{M})$为初值开始。最后关于迭代的终止条件，\cite{cai2010singular}中给出的SVT算法的迭代终止条件为
+\begin{equation*}
+    \frac{\|P_{\Omega}(\mathbf{X}^k - \mathbf{M})\|_F}{\|P_{\Omega}(\mathbf{M})\|_F} \leq \epsilon
+\end{equation*}
+下面给出$\mathbf{M}\in \mathbb{R}^{n\times n}$情形下的算法。
+
+\begin{algorithm}
+\caption{SVT算法} 
+\label{alg3}
+\begin{algorithmic}[1]
+\REQUIRE{$l = 5, \delta = 1.2\frac{n^2}{|\Omega|}, k_0 = \text{ceil}(\frac{\tau}{\delta\left\|P_\Omega(\mathbf{M})\right\|_2})$, $r_0 = 0, \mathbf{Y}^0 = k_0\delta P_\Omega(\mathbf{M})$, MaxIter = 1000, $tol = 1^{-4}$}
+\FOR{k = 1: MaxIter}
+\STATE{set $S_k = \min(r_{k-1} + l, n)$}
+\REPEAT
+\STATE{[$\mathbf{U}^{k-1}, \Sigma^{k-1}, \mathbf{V}^{k-1}]_{s_k} = svds(\mathbf{Y}^{k-1}, s_k)$}
+\STATE{Set $s_k = \min(s_k + l,n)$}
+\UNTIL{$\sigma_{s_{k-l}}^{k-1} \leq \tau$}
+\STATE{$r_k = max\{j: \sigma_j^{k-1} > \tau\}$}
+\STATE{$\mathbf{X}^k = \sum_{j=1}^{r_k}(\sigma_j^{k-1} - \tau)u_j^{k-1}v_j^{k-1}$}
+\IF{$\frac{\left\|P_\Omega(\mathbf{X}^k - \mathbf{M})\right\|_F}{\left\|P_\Omega(\mathbf{M})\right\|_F} \leq tol$}
+\STATE{break}
+\ENDIF
+\STATE{Set $$\mathbf{Y}_{ij}^k = \left\{\begin{array}{cc}
+    \mathbf{Y}_{ij}^{k-1} + \delta(\mathbf{M}_{ij} - \mathbf{X}_{ij}^k) & (i,j) \in \Omega \\
+   0 & (i,j) \notin \Omega
+\end{array}\right$$}
+\ENDFOR
+\RETURN{$\mathbf{X}^k$}
+\end{algorithmic}
+\end{algorithm}
