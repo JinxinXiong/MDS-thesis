@@ -9,59 +9,86 @@
 % 第一次进度报告
 \firstsummary{
 	\begin{adjustwidth}{2em}{2em}
-		在这一阶段，XXX工作基本完成，主要在如下几个方面：
+		在这一阶段，主要完成了如下几个方面的工作：
 		\begin{enumerate}
-			\item 完成了第一项。
-			\item 完成了第二项
-			\item 完成了第三项。 
+			\item 将题目范围确定在曲面重构范围内，及多位尺度变换问题，根据点与点之间的距离信息，推出一组合理的坐标。
+			\item 阅读教授提供的论文，梳理基本思路，了解问题的相关背景知识与现有解决方法，基本完成论文中第一章，即引言部分的编写。
+			\item 查阅与多维尺度变换方法和低秩矩阵填充方法相关的参考文献资料，并进行总结。
 		\end{enumerate}
 	\end{adjustwidth}
 }
 % 第2次进度报告
 \secondsummary{
 	\begin{adjustwidth}{2em}{2em}
-		...
+	    在这一阶段，主要完成了如下几个方面的工作：
+	    \begin{enumerate}
+	        \item 完成论文中经典多维尺度变换方法和SMACOF两种方法的理论部分编写，即对应论文正文中的第二章和第三章的内容。
+	        \item 对经典多维尺度变换方法和SMACOF算法在MATLAB上进行实现，并根据教授所提供的数据集和对生成坐标显示结果的函数，初步判断方法的效果，为后面的数值实验做好准备。
+	    \end{enumerate}
 	\end{adjustwidth}
 }
 % 第3次进度报告
 \thirdsummary{
 	\begin{adjustwidth}{2em}{2em}
-		...
+		\begin{enumerate}
+		    \item 确定论文后半部分方法为先用低秩矩阵填充方法恢复距离信息矩阵，再使用经典多维尺度变换方法重构出坐标。并确定论文中要涉及的低维矩阵填充方法为SVT和OPTSPACE。
+		    \item 完成论文正文部分中关于SVT和OPTSPACE的理论部分编写，即对应论文正文部分的第四章和第五章。
+		    \item 对SVT和OPTSPACE两种方法在MATLAB上进行实现，并在教授提供的数据集上进行基础的数值实验。
+		\end{enumerate}
 	\end{adjustwidth}
 }
 % 第4次进度报告
 \fourthsummary{
 	\begin{adjustwidth}{2em}{2em}
-		...
+		\begin{enumerate}
+		    \item 对于前面关于OPTSPACE算法的方式进行补充，添加与Incremental OPTSPACE相关的内容，并完成相应论文中内容编写和MATLAB上程序的实现。
+		    \item 在之前的数值实验结果的基础上，对各个算法进行调参操作，进行记录和总结。并完成数值实验部分，即论文正文部分中的第六章的初稿。
+		    \item 在教授的指导下，在数值实验章节中适当添加分析比较的部分，并将论文题目确定为“多维尺度变换问题方法与分析”。
+		    \item 补充第一章引言中内容和编写中英文摘要。
+		\end{enumerate}
 	\end{adjustwidth}
 }
 % 第1次老师评价
 \firstcomment{
 	\begin{adjustwidth}{2em}{2em}
-		论文完成情况良好。
+	\begin{enumerate}
+	    \item 建议先了解多维尺度问题的定义和简单经典模型。
+	    \item 尝试理解在初始信息不完整时有什么多维尺度重构的方法。
+	\end{enumerate}
 	\end{adjustwidth}
 }
 % 第2次老师评价
 \secondcomment{
 	\begin{adjustwidth}{2em}{2em}
-		...
+		\begin{enumerate}
+		    \item SMACOF是经典的解决多维尺度问题的方法，可以将其理解并实现。 
+		    \item 尝试使用MATLAB对实际的曲面信息进行读取和初步处理 \item 尝试对结果进行误差分析与图示。
+		\end{enumerate}
 	\end{adjustwidth}
 }
 % 第3次老师评价
 \thirdcomment{
 	\begin{adjustwidth}{2em}{2em}
-		...
+		\begin{enumerate}
+		    \item SVT是一种简单、高效的正则化方法，值得尝试。 
+		    \item OPTSPACE是指导老师未曾直接实现的方法，但因为其前沿、效果好，可以进行尝试。
+		    \item 尝试对于各种方法进行分析和比较。
+		\end{enumerate}
 	\end{adjustwidth}
 }
 % 第4次老师评价
 \fourthcomment{
 	\begin{adjustwidth}{2em}{2em}
-		...
+	    \begin{enumerate}
+	        \item 首先确保各个方法具有合理的参数，基本达到理论上的最优效果。 
+	        \item 应当在获取结果后，加入必要的方法原理分析和效果比较，指明好的方法为什么好。
+	        \item 对于结果图示应该确保规范、整齐、减少不必要的白边。
+	    \end{enumerate}
 	\end{adjustwidth}
 }
 % 老师总评价
 \finalcomment{
 	\begin{adjustwidth}{2em}{2em}
-		...
+		
 	\end{adjustwidth}
 }
